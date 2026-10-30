@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta 
+        name="viewport" 
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>Daily Habit Tracker — Student Progress</title>
+
+    <!-- Google Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link 
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" 
+        rel="stylesheet"
+    >
+
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Canvas Confetti for celebrations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        /* Base reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            padding: 28px 16px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        body.dark-mode {
+            background-color: #090d16;
+            color: #f8fafc;
+        }
+
+        /* Container */
+        .app-container {
+            max-width: 980px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        /* Card Component */
+        .card {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        }
+
+        body.dark-mode .card {
+            background-color: #111827;
+            border-color: #1f2937;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Header */
+        .header-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        @media (min-width: 640px) {
+            .header-bar {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+        }
+
+        body.dark-mode .header-bar {
+            border-color: #1f2937;
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background-color: #ecfdf5;
+            color: #047857;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            margin-bottom: 6px;
+        }
+
+        body.dark-mode .badge-pill {
+            background-color: #064e3b;
+            color: #6ee7b7;
+        }
+
+        .main-title {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+
+        .main-subtitle {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        body.dark-mode .main-subtitle {
+            color: #94a3b8;
+        }
+
+        /* Header Toolbar */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .month-box {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 4px 8px;
+            border-radius: 10px;
+        }
+
+        body.dark-mode .month-box {
+            background: #111827;
+            border-color: #374151;
+        }
+
+        .month-input {
+            border: none;
+            background: transparent;
+            font-size: 12px;
+            font-weight: 600;
+            color: inherit;
+            outline: none;
+        }
+
+        /* Reusable Buttons */
+        .btn {
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 7px 14px;
+            border-radius: 9px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.15s ease;
+        }
+
+        .btn-dark {
+            background-color: #0f172a;
+            color: #ffffff;
+        }
+
+        body.dark-mode .btn-dark {
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+
+        .btn-light {
+            background-color: #ffffff;
+            border-color: #cbd5e1;
+            color: #334155;
+        }
+
+        body.dark-mode .btn-light {
+            background-color: #1f2937;
+            border-color: #374151;
+            color: #f1f5f9;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        /* 4 KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        @media (min-width: 768px) {
+            .kpi-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .kpi-box {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 14px;
+            transition: transform 0.15s ease;
+        }
+
+        .kpi-box:hover {
+            transform: translateY(-1px);
+        }
+
+        body.dark-mode .kpi-box {
+            background-color: #0b1120;
+            border-color: #1f2937;
+        }
+
+        .kpi-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .kpi-value {
+            font-size: 26px;
+            font-weight: 800;
+            margin-top: 4px;
+        }
+
+        .kpi-desc {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        .color-green { color: #10b981; }
+        .color-red   { color: #f43f5e; }
+        .color-amber { color: #f59e0b; }
+
+        /* Progress Bar */
+        .progress-wrapper {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        body.dark-mode .progress-wrapper {
+            border-color: #1f2937;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .progress-track {
+            height: 9px;
+            background-color: #e2e8f0;
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+
+        body.dark-mode .progress-track {
+            background-color: #1f2937;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #10b981;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* ==============================================================
+           THE NEW FIRST-CLASS GRID: Unified Segmented Pill Switches
+           ============================================================== */
+        .table-scroll {
+            overflow-x: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin-top: 14px;
+        }
+
+        body.dark-mode .table-scroll {
+            border-color: #1f2937;
+        }
+
+        table {
+            width: 100%;
+            min-width: 660px;
+            border-collapse: collapse;
+            text-align: center;
+        }
+
+        th, td {
+            padding: 8px 6px;
+            border-bottom: 1px solid #f1f5f9;
+            border-right: 1px solid #f1f5f9;
+            font-size: 12px;
+        }
+
+        body.dark-mode th,
+        body.dark-mode td {
+            border-color: #1f2937;
+        }
+
+        thead th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: 700;
+            height: 52px;
+        }
+
+        body.dark-mode thead th {
+            background-color: #0b1120;
+            color: #94a3b8;
+        }
+
+        th.col-date, 
+        td.col-date {
+            position: sticky;
+            left: 0;
+            z-index: 2;
+            width: 72px;
+            background-color: #ffffff;
+            font-weight: 700;
+        }
+
+        body.dark-mode td.col-date {
+            background-color: #111827;
+        }
+
+        th.col-date {
+            background-color: #f1f5f9;
+            z-index: 3;
+        }
+
+        body.dark-mode th.col-date {
+            background-color: #0b1120;
+        }
+
+        .today-highlight td {
+            background-color: #f0fdf4 !important;
+        }
+
+        body.dark-mode .today-highlight td {
+            background-color: #064e3b22 !important;
+        }
+
+        /* Elegant Unified Segmented Switch (Notion/Linear Style) */
+        .switch-pill {
+            display: inline-flex;
+            align-items: center;
+            background-color: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 2px;
+            gap: 2px;
+            transition: all 0.15s ease;
+        }
+
+        body.dark-mode .switch-pill {
+            background-color: #0b1120;
+            border-color: #1f2937;
+        }
+
+        .switch-opt {
+            width: 28px;
+            height: 26px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            transition: all 0.15s ease;
+        }
+
+        .switch-opt:hover {
+            color: #334155;
+        }
+
+        body.dark-mode .switch-opt:hover {
+            color: #cbd5e1;
+        }
+
+        /* Active Done Segment (Soft Emerald) */
+        .switch-opt.done-active {
+            background-color: #10b981;
+            color: #ffffff;
+            box-shadow: 0 1px 4px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Active Missed Segment (Soft Rose) */
+        .switch-opt.missed-active {
+            background-color: #f43f5e;
+            color: #ffffff;
+            box-shadow: 0 1px 4px rgba(244, 63, 94, 0.4);
+        }
+
+        /* Daily Score Badge */
+        .score-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 6px;
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .score-badge.perfect {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        body.dark-mode .score-badge {
+            background: #1f2937;
+            color: #94a3b8;
+        }
+
+        body.dark-mode .score-badge.perfect {
+            background: #064e3b;
+            color: #6ee7b7;
+        }
+
+        /* Calculator Form */
+        .calc-form {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 14px;
+            margin: 14px 0;
+        }
+
+        body.dark-mode .calc-form {
+            background-color: #0b1120;
+            border-color: #1f2937;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #64748b;
+        }
+
+        .input-group input {
+            width: 85px;
+            padding: 7px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            background: #ffffff;
+            color: inherit;
+            outline: none;
+        }
+
+        body.dark-mode .input-group input {
+            background: #111827;
+            border-color: #374151;
+        }
+
+        /* 3 Output Result Cards */
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        @media (min-width: 640px) {
+            .results-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* Rating Scale 5 Columns */
+        .tier-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        @media (min-width: 640px) {
+            .tier-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+
+        .tier-box {
+            padding: 10px 8px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 11px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        body.dark-mode .tier-box {
+            background: #0b1120;
+            border-color: #1f2937;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app-container">
+
+    <!-- ==============================================
+         HEADER
+         ============================================== -->
+    <header class="header-bar">
+        <div>
+            <span class="badge-pill">
+                <span>⚡</span> RoutineCheck
+            </span>
+
+            <h1 class="main-title">
+                Daily Habit Tracker
+            </h1>
+
+            <p class="main-subtitle">
+                Track study routines, avoid phone distraction, and manage daily tasks.
+            </p>
+        </div>
+
+        <!-- Controls Toolbar -->
+        <div class="toolbar">
+            <div class="month-box">
+                <input
+                    type="month"
+                    id="monthInput"
+                    class="month-input"
+                >
+                <button
+                    type="button"
+                    id="btnCurrentMonth"
+                    class="btn btn-dark"
+                >
+                    Current
+                </button>
+            </div>
+
+            <!-- Dark Theme Toggle -->
+            <button
+                type="button"
+                id="btnThemeToggle"
+                class="btn btn-light"
+                title="Toggle Dark / Light Theme"
+            >
+                🌙
+            </button>
+
+            <!-- Export to CSV -->
+            <button
+                type="button"
+                id="btnExportCsv"
+                class="btn btn-light"
+                title="Download Excel CSV Spreadsheet"
+            >
+                📥 Export CSV
+            </button>
+        </div>
+    </header>
+
+    <!-- ==============================================
+         PART 1: DASHBOARD OVERVIEW
+         ============================================== -->
+    <section class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2 style="font-size: 16px; font-weight: 700;">
+                    1. Monthly Summary
+                </h2>
+                <p style="font-size: 12px; color: #64748b; margin-top: 2px;">
+                    Your total performance for this month
+                </p>
+            </div>
+
+            <span
+                id="labelCurrentMonth"
+                style="font-size: 12px; font-weight: 600; padding: 4px 10px; background: #f1f5f9; border-radius: 8px;"
+            >
+                —
+            </span>
+        </div>
+
+        <!-- 4 KPI Stat Boxes -->
+        <div class="kpi-grid">
+            <div class="kpi-box">
+                <span class="kpi-label">Completion Rate</span>
+                <p id="kpiCompletionRate" class="kpi-value color-green">0.00%</p>
+                <p class="kpi-desc">Overall task progress</p>
+            </div>
+
+            <div class="kpi-box">
+                <span class="kpi-label">Completed Tasks</span>
+                <p id="kpiCompleted" class="kpi-value">0</p>
+                <p class="kpi-desc">Marked Done (✓)</p>
+            </div>
+
+            <div class="kpi-box">
+                <span class="kpi-label">Missed Tasks</span>
+                <p id="kpiMissed" class="kpi-value color-red">0</p>
+                <p class="kpi-desc">Marked Missed (✕)</p>
+            </div>
+
+            <div class="kpi-box">
+                <span class="kpi-label">Day Streak</span>
+                <p id="kpiStreak" class="kpi-value color-amber">0 Days</p>
+                <p class="kpi-desc">Consecutive perfect days</p>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-wrapper">
+            <div class="progress-labels">
+                <span style="color: #64748b;">Monthly Target Progress</span>
+                <span id="labelProgressBar" class="color-green font-bold">0.00%</span>
+            </div>
+
+            <div class="progress-track">
+                <div id="elementProgressBar" class="progress-fill"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==============================================
+         PROGRESS TREND GRAPH (Chart.js)
+         ============================================== -->
+    <section class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div>
+                <h2 style="font-size: 15px; font-weight: 700;">
+                    Daily Progress Trend
+                </h2>
+                <p style="font-size: 12px; color: #64748b; margin-top: 2px;">
+                    Visual line graph showing tasks finished each day (0 to 3)
+                </p>
+            </div>
+            <span style="font-size: 11px; font-weight: 700; color: #10b981; background: #ecfdf5; padding: 2px 8px; border-radius: 6px;">
+                ● Live Activity
+            </span>
+        </div>
+
+        <div style="height: 145px; width: 100%;">
+            <canvas id="canvasTrendChart"></canvas>
+        </div>
+    </section>
+
+    <!-- ==============================================
+         PART 2: DAILY HABIT GRID (Elegant Segmented Pill Switches)
+         ============================================== -->
+    <section class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <h2 style="font-size: 16px; font-weight: 700;">
+                    2. Daily Habit Grid
+                </h2>
+                <p style="font-size: 12px; color: #64748b; margin-top: 2px;">
+                    Click <b>✓</b> to verify completion, click <b>✕</b> to mark missed
+                </p>
+            </div>
+
+            <!-- Legend Indicator -->
+            <div style="font-size: 11px; font-weight: 600; display: flex; gap: 12px;">
+                <span style="color: #10b981;">● Done (✓)</span>
+                <span style="color: #f43f5e;">● Missed (✕)</span>
+                <span style="color: #94a3b8;">○ Unset</span>
+            </div>
+        </div>
+
+        <div class="table-scroll">
+            <table id="tableHabitGrid">
+                <thead id="elementTableHead"></thead>
+                <tbody id="elementTableBody"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ==============================================
+         PART 3: PROGRESS & RANGE CALCULATOR
+         ============================================== -->
+    <section class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <h2 style="font-size: 16px; font-weight: 700;">
+                    3. Calculate Progress
+                </h2>
+                <p style="font-size: 12px; color: #64748b; margin-top: 2px;">
+                    Select any day range (e.g. 3 days, 5 days, or whole month) to view your rating.
+                </p>
+            </div>
+
+            <!-- Preset Range Buttons -->
+            <div style="display: flex; gap: 6px; align-items: center;">
+                <span style="font-size: 11px; color: #94a3b8;">Quick:</span>
+                <button type="button" class="btn btn-light btn-range-preset" data-days="3">Last 3 Days</button>
+                <button type="button" class="btn btn-light btn-range-preset" data-days="5">Last 5 Days</button>
+                <button type="button" class="btn btn-light btn-range-preset" data-days="7">Last 7 Days</button>
+            </div>
+        </div>
+
+        <!-- Range Inputs Form -->
+        <div class="calc-form">
+            <div class="input-group">
+                <label for="inputStartDay">From Day:</label>
+                <input
+                    type="number"
+                    id="inputStartDay"
+                    min="1"
+                    max="31"
+                    value="1"
+                >
+            </div>
+
+            <div class="input-group">
+                <label for="inputEndDay">To Day:</label>
+                <input
+                    type="number"
+                    id="inputEndDay"
+                    min="1"
+                    max="31"
+                    value="31"
+                >
+            </div>
+
+            <button
+                type="button"
+                id="btnCalculate"
+                class="btn btn-dark"
+                style="padding: 8px 18px;"
+            >
+                Calculate Range
+            </button>
+
+            <button
+                type="button"
+                id="btnFullMonth"
+                class="btn btn-light"
+                style="padding: 8px 16px;"
+            >
+                Full Month
+            </button>
+        </div>
+
+        <p id="labelPeriodDescription" style="font-size: 12px; color: #64748b; margin-bottom: 10px;"></p>
+        <p id="labelRangeError" style="font-size: 12px; font-weight: 700; color: #ef4444; margin-bottom: 10px; display: none;"></p>
+
+        <!-- 3 Output Stat Cards -->
+        <div class="results-grid">
+            <div class="kpi-box">
+                <span class="kpi-label">Completion Score</span>
+                <p id="evalPercentage" class="kpi-value color-green">0.00%</p>
+                <p class="kpi-desc">For selected days</p>
+            </div>
+
+            <div class="kpi-box">
+                <span class="kpi-label">Completed Tasks</span>
+                <p id="evalRatio" class="kpi-value">0 / 0</p>
+                <p class="kpi-desc">Completed vs total target</p>
+            </div>
+
+            <div class="kpi-box" style="background-color: #0f172a; color: #ffffff;">
+                <span style="font-size: 11px; color: #94a3b8;">Your Rating</span>
+                <p id="evalRatingBadge" style="font-size: 20px; font-weight: 800; color: #34d399; margin-top: 4px;">Not Rated</p>
+                <p id="evalRatingSubtitle" style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Mark boxes to evaluate</p>
+            </div>
+        </div>
+
+        <!-- 4 Minor Statistics Breakdown -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; margin-bottom: 16px;">
+            <div style="padding: 10px 6px; border-radius: 8px; background: #f8fafc; border: 1px solid #e2e8f0;">
+                <p style="font-size: 10px; color: #f43f5e; font-weight: 700;">Missed</p>
+                <p id="statDetailMissed" style="font-size: 16px; font-weight: 800; margin-top: 2px;">0</p>
+            </div>
+
+            <div style="padding: 10px 6px; border-radius: 8px; background: #f8fafc; border: 1px solid #e2e8f0;">
+                <p style="font-size: 10px; color: #94a3b8; font-weight: 700;">Unmarked</p>
+                <p id="statDetailUnmarked" style="font-size: 16px; font-weight: 800; margin-top: 2px;">0</p>
+            </div>
+
+            <div style="padding: 10px 6px; border-radius: 8px; background: #f8fafc; border: 1px solid #e2e8f0;">
+                <p style="font-size: 10px; color: #64748b; font-weight: 700;">Marked</p>
+                <p id="statDetailMarked" style="font-size: 16px; font-weight: 800; margin-top: 2px;">0</p>
+            </div>
+
+            <div style="padding: 10px 6px; border-radius: 8px; background: #f8fafc; border: 1px solid #e2e8f0;">
+                <p style="font-size: 10px; color: #10b981; font-weight: 700;">Coverage</p>
+                <p id="statDetailCoverage" style="font-size: 16px; font-weight: 800; margin-top: 2px;">0.00%</p>
+            </div>
+        </div>
+
+        <!-- Rating Scale Section -->
+        <div style="border-top: 1px solid #f1f5f9; padding-top: 14px;">
+            <p style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">
+                Official Rating Scale Criteria
+            </p>
+
+            <div class="tier-grid">
+                <div class="tier-box">
+                    <b>90–100%</b><br>
+                    <span>🏆 Excellent</span>
+                </div>
+
+                <div class="tier-box">
+                    <b>80–89.99%</b><br>
+                    <span>🌟 Very Good</span>
+                </div>
+
+                <div class="tier-box">
+                    <b>60–79.99%</b><br>
+                    <span>👍 Good</span>
+                </div>
+
+                <div class="tier-box">
+                    <b>40–59.99%</b><br>
+                    <span>⚠️ Needs Work</span>
+                </div>
+
+                <div class="tier-box">
+                    <b>0–39.99%</b><br>
+                    <span>💪 Keep Going</span>
+                </div>
+            </div>
+
+            <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-top: 12px;">
+                <b>Formula:</b> Completion Percentage = (Completed Tasks ÷ Total Expected Tasks) × 100
+            </p>
+        </div>
+    </section>
+
+    <!-- Footer Area -->
+    <footer style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 24px; font-size: 12px; color: #94a3b8;">
+        <span>Saved automatically in browser LocalStorage</span>
+        <button
+            type="button"
+            id="btnClearMonth"
+            style="background: none; border: none; color: #ef4444; font-size: 12px; cursor: pointer; text-decoration: underline;"
+        >
+            Clear Current Month Data
+        </button>
+    </footer>
+
+</div>
+
+<!-- ==============================================
+     JAVASCRIPT LOGIC
+     ============================================== -->
+<script>
+"use strict";
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    // 1. Static Configuration
+    const APP_CONFIG = {
+        STORAGE_KEY: "daily_habit_tracker_data_v1",
+        THEME_KEY: "daily_habit_tracker_theme",
+
+        // The 3 required student tasks
+        TASKS: [
+            { 
+                id: "task_1", 
+                title: "Maintained a Fixed Study Routine", 
+                icon: "📚" 
+            },
+            { 
+                id: "task_2", 
+                title: "Avoided Unnecessary Phone Use", 
+                icon: "📵" 
+            },
+            { 
+                id: "task_3", 
+                title: "Completed Today's To-Do List", 
+                icon: "🎯" 
+            }
+        ],
+
+        // 5 Rating Tiers
+        RATING_TIERS: [
+            { 
+                min: 90, 
+                title: "🏆 Excellent", 
+                subtitle: "Outstanding consistency! Keep it up." 
+            },
+            { 
+                min: 80, 
+                title: "🌟 Very Good", 
+                subtitle: "Great discipline and routine." 
+            },
+            { 
+                min: 60, 
+                title: "👍 Good", 
+                subtitle: "Good effort, try to push a bit more." 
+            },
+            { 
+                min: 40, 
+                title: "⚠️ Needs Work", 
+                subtitle: "Focus more on daily consistency." 
+            },
+            { 
+                min: 0,  
+                title: "💪 Keep Going", 
+                subtitle: "Don't give up, start fresh today." 
+            }
+        ]
+    };
+
+    // 2. Global State Object
+    let trackerState = {
+        records: {},
+        selectedMonth: "",
+        chart: null
+    };
+
+    // 3. Cache DOM Selectors
+    const monthInput = document.getElementById("monthInput");
+    const btnCurrentMonth = document.getElementById("btnCurrentMonth");
+    const btnThemeToggle = document.getElementById("btnThemeToggle");
+    const btnExportCsv = document.getElementById("btnExportCsv");
+    const btnClearMonth = document.getElementById("btnClearMonth");
+
+    const labelCurrentMonth = document.getElementById("labelCurrentMonth");
+    const kpiCompletionRate = document.getElementById("kpiCompletionRate");
+    const kpiCompleted = document.getElementById("kpiCompleted");
+    const kpiMissed = document.getElementById("kpiMissed");
+    const kpiStreak = document.getElementById("kpiStreak");
+
+    const labelProgressBar = document.getElementById("labelProgressBar");
+    const elementProgressBar = document.getElementById("elementProgressBar");
+
+    const elementTableHead = document.getElementById("elementTableHead");
+    const elementTableBody = document.getElementById("elementTableBody");
+
+    const inputStartDay = document.getElementById("inputStartDay");
+    const inputEndDay = document.getElementById("inputEndDay");
+    const btnCalculate = document.getElementById("btnCalculate");
+    const btnFullMonth = document.getElementById("btnFullMonth");
+
+    const labelPeriodDescription = document.getElementById("labelPeriodDescription");
+    const labelRangeError = document.getElementById("labelRangeError");
+    const evalPercentage = document.getElementById("evalPercentage");
+    const evalRatio = document.getElementById("evalRatio");
+    const evalRatingBadge = document.getElementById("evalRatingBadge");
+    const evalRatingSubtitle = document.getElementById("evalRatingSubtitle");
+
+    const statDetailMissed = document.getElementById("statDetailMissed");
+    const statDetailUnmarked = document.getElementById("statDetailUnmarked");
+    const statDetailMarked = document.getElementById("statDetailMarked");
+    const statDetailCoverage = document.getElementById("statDetailCoverage");
+
+    const canvasTrendChart = document.getElementById("canvasTrendChart");
+
+    // 4. Date Helpers
+    function getTodayMonthString() {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        return `${year}-${month}`;
+    }
+
+    function getDaysCountInMonth(monthString) {
+        const parts = monthString.split("-");
+        const year = Number(parts[0]);
+        const month = Number(parts[1]);
+        return new Date(year, month, 0).getDate();
+    }
+
+    function getFormattedMonthLabel(monthString) {
+        const parts = monthString.split("-");
+        const year = Number(parts[0]);
+        const month = Number(parts[1]);
+        const dateObj = new Date(year, month - 1, 1);
+
+        return dateObj.toLocaleDateString("en-US", {
+            month: "long",
+            year: "numeric"
+        });
+    }
+
+    function makeDateKey(monthString, day) {
+        const formattedDay = String(day).padStart(2, "0");
+        return `${monthString}-${formattedDay}`;
+    }
+
+    // 5. LocalStorage Handlers
+    function loadSavedData() {
+        try {
+            const raw = localStorage.getItem(APP_CONFIG.STORAGE_KEY);
+            trackerState.records = raw ? JSON.parse(raw) : {};
+        } catch (error) {
+            trackerState.records = {};
+        }
+    }
+
+    function persistData() {
+        try {
+            const dataString = JSON.stringify(trackerState.records);
+            localStorage.setItem(APP_CONFIG.STORAGE_KEY, dataString);
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    // 6. Rating Scale Evaluator
+    function determineRating(percentage, markedCount) {
+        if (markedCount === 0) {
+            return { 
+                title: "Not Rated", 
+                subtitle: "No data marked for this range" 
+            };
+        }
+
+        for (let i = 0; i < APP_CONFIG.RATING_TIERS.length; i++) {
+            const tier = APP_CONFIG.RATING_TIERS[i];
+            if (percentage >= tier.min) {
+                return tier;
+            }
+        }
+
+        return APP_CONFIG.RATING_TIERS[APP_CONFIG.RATING_TIERS.length - 1];
+    }
+
+    // 7. Render Table Header
+    function renderTableHeader() {
+        let html = '<tr>';
+        html += '<th class="col-date">Date</th>';
+
+        for (let i = 0; i < APP_CONFIG.TASKS.length; i++) {
+            const task = APP_CONFIG.TASKS[i];
+            html += '<th>';
+            html += task.icon + ' ' + task.title;
+            html += '</th>';
+        }
+
+        // Summary column for daily completion rate
+        html += '<th style="width: 80px;">Score</th>';
+        html += '</tr>';
+
+        elementTableHead.innerHTML = html;
+    }
+
+    // 8. Render Table Grid (Modern Segmented Switches)
+    function renderTableGrid() {
+        const totalDays = getDaysCountInMonth(trackerState.selectedMonth);
+        const currentMonthNow = getTodayMonthString();
+        const isCurrentActive = trackerState.selectedMonth === currentMonthNow;
+        const currentDayNum = new Date().getDate();
+
+        let html = "";
+
+        for (let day = 1; day <= totalDays; day++) {
+            const dateKey = makeDateKey(trackerState.selectedMonth, day);
+            const dayData = trackerState.records[dateKey] || {};
+            const isToday = isCurrentActive && (day === currentDayNum);
+
+            const rowClass = isToday ? 'class="today-highlight"' : '';
+            html += '<tr ' + rowClass + '>';
+
+            // Date Column Cell
+            html += '<td class="col-date">' + day;
+            if (isToday) {
+                html += '<span style="display:block;font-size:9px;color:#10b981;font-weight:800;">Today</span>';
+            }
+            html += '</td>';
+
+            let dayDoneCount = 0;
+
+            // 3 Tasks Rendered as Sleek Unified Segmented Switches
+            for (let t = 0; t < APP_CONFIG.TASKS.length; t++) {
+                const status = dayData[t] || "";
+                const isDone = (status === "done");
+                const isMissed = (status === "missed");
+
+                if (isDone) dayDoneCount++;
+
+                const doneClass = isDone ? "done-active" : "";
+                const missedClass = isMissed ? "missed-active" : "";
+
+                html += '<td>';
+                html += '<div class="switch-pill">';
+
+                // Check Segment
+                html += '<button type="button" ';
+                html += 'class="switch-opt ' + doneClass + '" ';
+                html += 'data-day="' + day + '" ';
+                html += 'data-task="' + t + '" ';
+                html += 'data-action="done" ';
+                html += 'title="Mark as Done (✓)">✓</button>';
+
+                // Cross Segment
+                html += '<button type="button" ';
+                html += 'class="switch-opt ' + missedClass + '" ';
+                html += 'data-day="' + day + '" ';
+                html += 'data-task="' + t + '" ';
+                html += 'data-action="missed" ';
+                html += 'title="Mark as Missed (✕)">✕</button>';
+
+                html += '</div>';
+                html += '</td>';
+            }
+
+            // Daily Score Badge Cell
+            const isPerfect = (dayDoneCount === APP_CONFIG.TASKS.length);
+            html += '<td>';
+            html += '<span class="score-badge ' + (isPerfect ? 'perfect' : '') + '">';
+            html += dayDoneCount + ' / 3';
+            html += '</span>';
+            html += '</td>';
+
+            html += '</tr>';
+        }
+
+        elementTableBody.innerHTML = html;
+    }
+
+    // 9. Trend Chart Renderer (Chart.js)
+    function updateTrendChart(scores, totalDays) {
+        if (!window.Chart) return;
+
+        const labels = [];
+        for (let i = 1; i <= totalDays; i++) {
+            labels.push(String(i));
+        }
+
+        if (trackerState.chart) {
+            trackerState.chart.data.labels = labels;
+            trackerState.chart.data.datasets[0].data = scores;
+            trackerState.chart.update();
+            return;
+        }
+
+        trackerState.chart = new Chart(canvasTrendChart, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Tasks Done",
+                    data: scores,
+                    borderColor: "#10b981",
+                    backgroundColor: "rgba(16, 185, 129, 0.08)",
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 2.5,
+                    pointBackgroundColor: "#10b981"
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 3,
+                        ticks: { stepSize: 1, font: { family: "Inter", size: 10 } },
+                        grid: { color: "rgba(150, 150, 150, 0.08)" }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: "Inter", size: 9 } }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+
+    // 10. Compute Metrics & Refresh Dashboard
+    function refreshCalculations(showConfetti = false) {
+        const daysInMonth = getDaysCountInMonth(trackerState.selectedMonth);
+        const totalExpected = daysInMonth * APP_CONFIG.TASKS.length;
+
+        let completedCount = 0;
+        let missedCount = 0;
+        let streak = 0;
+        let tempStreak = 0;
+        const dailyScores = [];
+
+        // Calculate Month Totals
+        for (let day = 1; day <= daysInMonth; day++) {
+            const key = makeDateKey(trackerState.selectedMonth, day);
+            const data = trackerState.records[key] || {};
+            let dayDone = 0;
+
+            for (let t = 0; t < APP_CONFIG.TASKS.length; t++) {
+                if (data[t] === "done") {
+                    completedCount++;
+                    dayDone++;
+                } else if (data[t] === "missed") {
+                    missedCount++;
+                }
+            }
+
+            dailyScores.push(dayDone);
+
+            // Streak Logic: All 3 tasks done in a single day
+            if (dayDone === APP_CONFIG.TASKS.length) {
+                tempStreak++;
+                if (tempStreak > streak) streak = tempStreak;
+            } else {
+                tempStreak = 0;
+            }
+        }
+
+        const monthPercent = totalExpected > 0 
+            ? (completedCount / totalExpected) * 100 
+            : 0;
+
+        // Update Dashboard Elements
+        labelCurrentMonth.textContent = getFormattedMonthLabel(trackerState.selectedMonth);
+        kpiCompletionRate.textContent = monthPercent.toFixed(2) + "%";
+        kpiCompleted.textContent = completedCount;
+        kpiMissed.textContent = missedCount;
+        kpiStreak.textContent = streak + " Days";
+
+        labelProgressBar.textContent = monthPercent.toFixed(2) + "%";
+        elementProgressBar.style.width = Math.min(100, monthPercent) + "%";
+
+        // Update Trend Chart
+        updateTrendChart(dailyScores, daysInMonth);
+
+        // Calculate Range Evaluation
+        const startDay = Number(inputStartDay.value.trim());
+        const endDay = Number(inputEndDay.value.trim());
+
+        const isStartValid = (startDay >= 1 && startDay <= daysInMonth);
+        const isEndValid = (endDay >= 1 && endDay <= daysInMonth);
+
+        if (!isStartValid || !isEndValid || endDay < startDay) {
+            labelRangeError.textContent = "Please enter a valid day range between 1 and " + daysInMonth;
+            labelRangeError.style.display = "block";
+            return;
+        }
+
+        labelRangeError.style.display = "none";
+
+        const rangeDays = endDay - startDay + 1;
+        const rangeExpected = rangeDays * APP_CONFIG.TASKS.length;
+
+        let rangeDone = 0;
+        let rangeMissed = 0;
+        let rangeUnmarked = 0;
+
+        for (let day = startDay; day <= endDay; day++) {
+            const key = makeDateKey(trackerState.selectedMonth, day);
+            const data = trackerState.records[key] || {};
+
+            for (let t = 0; t < APP_CONFIG.TASKS.length; t++) {
+                if (data[t] === "done") {
+                    rangeDone++;
+                } else if (data[t] === "missed") {
+                    rangeMissed++;
+                } else {
+                    rangeUnmarked++;
+                }
+            }
+        }
+
+        const rangeMarked = rangeDone + rangeMissed;
+        const rangePercent = rangeExpected > 0 
+            ? (rangeDone / rangeExpected) * 100 
+            : 0;
+        const rangeCoverage = rangeExpected > 0 
+            ? (rangeMarked / rangeExpected) * 100 
+            : 0;
+
+        const rating = determineRating(rangePercent, rangeMarked);
+
+        labelPeriodDescription.textContent = 
+            "Selected: Day " + startDay + " to " + endDay + 
+            " (" + rangeDays + " days • " + rangeExpected + " expected tasks)";
+
+        evalPercentage.textContent = rangePercent.toFixed(2) + "%";
+        evalRatio.textContent = rangeDone + " / " + rangeExpected;
+        evalRatingBadge.textContent = rating.title;
+        evalRatingSubtitle.textContent = rating.subtitle;
+
+        statDetailMissed.textContent = rangeMissed;
+        statDetailUnmarked.textContent = rangeUnmarked;
+        statDetailMarked.textContent = rangeMarked;
+        statDetailCoverage.textContent = rangeCoverage.toFixed(2) + "%";
+
+        // Confetti Celebration
+        if (showConfetti && rangePercent >= 90 && window.confetti) {
+            confetti({ particleCount: 80, spread: 65, origin: { y: 0.6 } });
+        }
+    }
+
+    // 11. Event Delegation for Table Segmented Switches
+    elementTableBody.addEventListener("click", function (event) {
+        const btn = event.target.closest("button[data-day][data-task][data-action]");
+        if (!btn) return;
+
+        const day = Number(btn.dataset.day);
+        const task = Number(btn.dataset.task);
+        const action = btn.dataset.action;
+        const key = makeDateKey(trackerState.selectedMonth, day);
+
+        if (!trackerState.records[key]) {
+            trackerState.records[key] = {};
+        }
+
+        const current = trackerState.records[key][task] || "";
+
+        // Segment switch toggle action
+        if (current === action) {
+            delete trackerState.records[key][task];
+        } else {
+            trackerState.records[key][task] = action;
+        }
+
+        if (Object.keys(trackerState.records[key]).length === 0) {
+            delete trackerState.records[key];
+        }
+
+        if (persistData()) {
+            renderTableGrid();
+            refreshCalculations();
+        }
+    });
+
+    // Month Selector function
+    function setMonth(monthString) {
+        trackerState.selectedMonth = monthString;
+        monthInput.value = monthString;
+
+        const days = getDaysCountInMonth(monthString);
+        inputStartDay.max = String(days);
+        inputEndDay.max = String(days);
+        inputStartDay.value = "1";
+        inputEndDay.value = String(days);
+
+        renderTableGrid();
+        refreshCalculations();
+    }
+
+    monthInput.addEventListener("change", function (e) {
+        setMonth(e.target.value);
+    });
+
+    btnCurrentMonth.addEventListener("click", function () {
+        setMonth(getTodayMonthString());
+    });
+
+    // Dark Theme Toggle
+    btnThemeToggle.addEventListener("click", function () {
+        const isDark = document.body.classList.toggle("dark-mode");
+        btnThemeToggle.textContent = isDark ? "☀️" : "🌙";
+        localStorage.setItem(APP_CONFIG.THEME_KEY, isDark ? "dark" : "light");
+    });
+
+    if (localStorage.getItem(APP_CONFIG.THEME_KEY) === "dark") {
+        document.body.classList.add("dark-mode");
+        btnThemeToggle.textContent = "☀️";
+    }
+
+    // Export CSV
+    btnExportCsv.addEventListener("click", function () {
+        const days = getDaysCountInMonth(trackerState.selectedMonth);
+        let csv = "data:text/csv;charset=utf-8,Day,";
+        
+        for (let i = 0; i < APP_CONFIG.TASKS.length; i++) {
+            csv += '"' + APP_CONFIG.TASKS[i].title + '",';
+        }
+        csv += "Score\n";
+
+        for (let d = 1; d <= days; d++) {
+            const key = makeDateKey(trackerState.selectedMonth, d);
+            const data = trackerState.records[key] || {};
+            let row = d + ",";
+            let done = 0;
+
+            for (let t = 0; t < APP_CONFIG.TASKS.length; t++) {
+                const s = data[t] || "empty";
+                if (s === "done") done++;
+                row += s + ",";
+            }
+            row += done + "/3\n";
+            csv += row;
+        }
+
+        const encodedUri = encodeURI(csv);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "Habit_Report_" + trackerState.selectedMonth + ".csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+
+    // Range Button Clicks
+    btnCalculate.addEventListener("click", function () {
+        refreshCalculations(true);
+    });
+
+    btnFullMonth.addEventListener("click", function () {
+        inputStartDay.value = "1";
+        inputEndDay.value = String(getDaysCountInMonth(trackerState.selectedMonth));
+        refreshCalculations(true);
+    });
+
+    // Preset Range Handlers
+    const presetButtons = document.querySelectorAll(".btn-range-preset");
+    for (let i = 0; i < presetButtons.length; i++) {
+        presetButtons[i].addEventListener("click", function () {
+            const daysCount = Number(this.dataset.days);
+            const totalDays = getDaysCountInMonth(trackerState.selectedMonth);
+            const todayNum = new Date().getDate();
+
+            const anchor = (trackerState.selectedMonth === getTodayMonthString() && todayNum <= totalDays)
+                ? todayNum
+                : totalDays;
+
+            inputStartDay.value = String(Math.max(1, anchor - daysCount + 1));
+            inputEndDay.value = String(anchor);
+            refreshCalculations(true);
+        });
+    }
+
+    // Clear Month
+    btnClearMonth.addEventListener("click", function () {
+        const name = getFormattedMonthLabel(trackerState.selectedMonth);
+        if (!confirm("Are you sure you want to clear all marked habits for " + name + "?")) {
+            return;
+        }
+
+        const prefix = trackerState.selectedMonth + "-";
+        for (const k in trackerState.records) {
+            if (k.indexOf(prefix) === 0) {
+                delete trackerState.records[k];
+            }
+        }
+
+        persistData();
+        renderTableGrid();
+        refreshCalculations();
+    });
+
+    // 12. App Launch
+    loadSavedData();
+    renderTableHeader();
+    setMonth(getTodayMonthString());
+});
+</script>
+
+</body>
+</html>
